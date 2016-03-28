@@ -26,13 +26,20 @@
 
 from __future__ import absolute_import, print_function
 
+from .models import PIDStatus, PersistentIdentifier
 from .providers.recordid import RecordIdProvider
 
 
 def recid_minter(record_uuid, data):
     """Mint record identifiers."""
-    assert 'control_number' not in data
-    provider = RecordIdProvider.create(
-        object_type='rec', object_uuid=record_uuid)
-    data['control_number'] = provider.pid.pid_value
-    return provider.pid
+    if 'control_number' not in data:
+        provider = RecordIdProvider.create(
+            object_type='rec', object_uuid=record_uuid)
+        data['control_number'] = provider.pid.pid_value
+        return provider.pid
+    else:
+        return PersistentIdentifier.create(
+            pid_type='recid', pid_value=data['control_number'],
+            status=PIDStatus.REGISTERED,
+            object_uuid=record_uuid,
+        )
